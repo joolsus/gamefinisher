@@ -14,13 +14,42 @@ async function validateIGDBAccessToken(req, res, next) {
 
 router.use(validateIGDBAccessToken);
 
+//SPECIFIC GAME
 router.post("/games/:game_id", async (req, res) => {
-  console.log(`search req: ${req}`);
-  console.log(`IGDB_ACCESS_TOKEN_OBJECT = ${IGDB_ACCESS_TOKEN_OBJECT}`);
-  console.log(IGDB_ACCESS_TOKEN_OBJECT);
-  res.status(200).json({ message: "POST game" });
+  let body = 'fields id, name, summary, url, cover.image_id, platforms.name, platforms.id, platforms.platform_logo.image_id; where id='+req.params.game_id+';'
+  console.log(body)
+
+
+
+  const response = await fetch(
+    urlBase+'games/',
+    {
+      method: "POST",
+      headers: {
+        'Client-ID': process.env.IGDB_CLIENT_ID,
+        'Authorization':' Bearer ' +IGDB_ACCESS_TOKEN_OBJECT.access_token,
+      },
+      body: body
+      
+      
+    }
+  );
+  
+  //console.log(response);  
+
+
+  const json = await response.json();
+  console.log(json);  
+  //if there are errors from the graphql request, just throw the json object which will trigger Parse to send
+  //an error message with the json object as content
+  if (json.errors) {
+    throw json;
+  }
+  res.status(200).json(json);
 });
 
+
+//SEARCH
 router.post("/search/:searchTerm", async (req, res) => {
   console.log(`search req: ${req.params}`);
   console.log(req.params.searchTerm);
